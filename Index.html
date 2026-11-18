@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The World Fashion</title>
+<style>
+:root{--plum:#70234f;--pink:#f8eaf0;--ink:#241d21}
+*{box-sizing:border-box}
+body{margin:0;background:#fff8fa;color:var(--ink);font-family:Arial,sans-serif}
+header{height:85px;background:white;display:flex;align-items:center;justify-content:space-between;padding:15px 5%;position:sticky;top:0;z-index:5}
+.logo{font-size:23px;color:var(--plum);border:2px solid;border-radius:50%;padding:10px}
+.brand{font-family:Georgia,serif;color:var(--plum);font-weight:bold}
+.welcome{color:#b39a69;font-family:Georgia,serif;font-style:italic}
+.cart{background:var(--plum);color:white;border:0;padding:15px;border-radius:12px;font-size:20px}
+.hero{text-align:center;padding:75px 15px;background:linear-gradient(115deg,#fff2f5,#f5e5ed)}
+.hero h1{font:bold italic clamp(40px,8vw,75px) Georgia;color:var(--plum)}
+.hero p{font-size:22px}
+.btn{background:var(--plum);color:white;padding:15px 30px;border:0;border-radius:12px;font-size:17px;cursor:pointer;text-decoration:none}
+main{max-width:1100px;margin:auto;padding:45px 18px}
+h2{text-align:center;font-size:32px}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.product{background:white;border-radius:18px;overflow:hidden;position:relative;box-shadow:0 5px 20px #0001;text-align:center}
+.product img{width:100%;height:300px;object-fit:cover}
+.info{padding:15px}
+.discount{position:absolute;top:12px;left:12px;background:#e66c79;color:white;padding:8px;border-radius:8px}
+.price{font-size:22px;font-weight:bold}
+.old{font-size:14px;color:#888;text-decoration:line-through}
+.action{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+.action button{background:var(--plum);color:white;border:0;padding:11px;border-radius:9px}
+.action .outline{background:white;color:var(--plum);border:1px solid}
+footer{background:#311c29;color:white;text-align:center;padding:30px}
+.drawer{display:none;position:fixed;inset:0;background:white;z-index:10;padding:20px;overflow:auto}
+.drawer.show{display:block}
+.cartitem{padding:15px;border-bottom:1px solid #ddd}
+@media(min-width:750px){.products{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.welcome{display:none}.product img{height:230px}.info{padding:10px}.action button{font-size:12px;padding:9px}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">✿</div>
+<div class="brand">THE WORLD FASHION</div>
+<div class="welcome">Welcome to our Collection</div>
+<button class="cart" onclick="openCart()">🛒 <span id="count">0</span></button>
+</header>
+
+<section class="hero">
+<h1>The World Fashion</h1>
+<p>Beautiful styles. Everyday elegance.</p>
+<a class="btn" href="#collection">Shop Now</a>
+</section>
+
+<main id="collection">
+<h2>Our Collection</h2>
+<div class="products" id="products"></div>
+</main>
+
+<footer>
+<h3>THE WORLD FASHION</h3>
+Online Fashion Store
+</footer>
+
+<div class="drawer" id="drawer">
+<button onclick="closeCart()">← Back to Products</button>
+<h2>Your Shopping Cart</h2>
+<div id="cartitems"></div>
+<h3 id="total">Total: ₹0</h3>
+<button class="btn" onclick="checkout()">Place Order on WhatsApp</button>
+</div>
+
+<script>
+// APNA WHATSAPP NUMBER YAHAN DAALEIN
+const WHATSAPP_NUMBER="91XXXXXXXXXX";
+
+const products=[
+{id:1,name:"Elegant Anarkali Kurti",price:999,old:1999,discount:"-50%",image:"https://images.unsplash.com/photo-1583391733956-6c78276477e5?auto=format&fit=crop&w=900&q=85"},
+{id:2,name:"Classic Party Wear Suit",price:1199,old:2299,discount:"-48%",image:"https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=85"},
+{id:3,name:"Traditional Kurti Set",price:899,old:1799,discount:"-50%",image:"https://images.unsplash.com/photo-1617627575331-8f7f4a6d6e9c?auto=format&fit=crop&w=900&q=85"},
+{id:4,name:"Festive Ethnic Wear",price:1399,old:2499,discount:"-44%",image:"https://images.unsplash.com/photo-1583391733981-849840f9f7b2?auto=format&fit=crop&w=900&q=85"}
+];
+
+let cart=[];
+
+function money(n){return "₹"+n.toLocaleString("en-IN")}
+
+function showProducts(){
+document.getElementById("products").innerHTML=products.map(p=>`
+<div class="product">
+<span class="discount">${p.discount}</span>
+<img src="${p.image}" alt="${p.name}">
+<div class="info">
+<h3>${p.name}</h3>
+<p class="price">${money(p.price)} <span class="old">${money(p.old)}</span></p>
+<div class="action">
+<button onclick="add(${p.id})">Add to Cart</button>
+<button class="outline" onclick="buy(${p.id})">Buy Now</button>
+</div>
+</div>
+</div>`).join("");
+}
+
+function add(id){
+let item=cart.find(x=>x.id===id);
+if(item)item.qty++;
+else cart.push({id,qty:1});
+renderCart();
+}
+
+function buy(id){
+add(id);
+openCart();
+}
+
+function renderCart(){
+document.getElementById("count").innerText=cart.reduce((s,x)=>s+x.qty,0);
+document.getElementById("cartitems").innerHTML=cart.length?
+cart.map(x=>{
+let p=products.find(y=>y.id===x.id);
+return `<div class="cartitem">
+<h3>${p.name}</h3>
+${money(p.price)} × ${x.qty}
+<button onclick="change(${p.id},-1)">−</button>
+<button onclick="change(${p.id},1)">+</button>
+<button onclick="removeItem(${p.id})">Remove</button>
+</div>`;
+}).join(""):"Your cart is empty";
+
+let total=cart.reduce((s,x)=>s+products.find(p=>p.id===x.id).price*x.qty,0);
+document.getElementById("total").innerText="Total: "+money(total);
+}
+
+function change(id,n){
+let x=cart.find(y=>y.id===id);
+if(x){x.qty+=n;if(x.qty<=0)removeItem(id);else renderCart();}
+}
+
+function removeItem(id){
+cart=cart.filter(x=>x.id!==id);
+renderCart();
+}
+
+function openCart(){
+document.getElementById("drawer").classList.add("show");
+renderCart();
+}
+
+function closeCart(){
+document.getElementById("drawer").classList.remove("show");
+}
+
+function checkout(){
+if(!cart.length){alert("Cart is empty");return;}
+if(!/^91\d{10}$/.test(WHATSAPP_NUMBER)){
+alert("Please add your WhatsApp number in the code first.");
+return;
+}
+let total=cart.reduce((s,x)=>s+products.find(p=>p.id===x.id).price*x.qty,0);
+let message="Hello The World Fashion! I want to order:\n"+
+cart.map(x=>{
+let p=products.find(y=>y.id===x.id);
+return p.name+" x "+x.qty+" = "+money(p.price*x.qty);
+}).join("\n")+"\nTotal: "+money(total);
+window.open("https://wa.me/"+WHATSAPP_NUMBER+"?text="+encodeURIComponent(message),"_blank");
+}
+
+showProducts();
+renderCart();
+</script>
+</body>
+</html>
